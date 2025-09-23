@@ -37,7 +37,7 @@ services:
     networks:
       - wuzapi-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wuzapi"]
+      test: ["CMD-SHELL", "pg_isready -U jack-wuzapi"]
       interval: 5s
       timeout: 5s
       retries: 5
