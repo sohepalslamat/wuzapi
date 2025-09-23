@@ -47,13 +47,15 @@ var (
 	globalWebhook = flag.String("globalwebhook", "", "Global webhook URL to receive all events from all users")
 	versionFlag   = flag.Bool("version", false, "Display version information and exit")
 
-	container     *sqlstore.Container
-	clientManager = NewClientManager()
-	killchannel   = make(map[string](chan bool))
-	userinfocache = cache.New(5*time.Minute, 10*time.Minute)
+	container        *sqlstore.Container
+	clientManager    = NewClientManager()
+	killchannel      = make(map[string](chan bool))
+	userinfocache    = cache.New(5*time.Minute, 10*time.Minute)
+	lastMessageCache = cache.New(24*time.Hour, 24*time.Hour)
+	globalHTTPClient = &http.Client{Timeout: 60 * time.Second}
 )
 
-const version = "1.0.0"
+const version = "1.0.2"
 
 func init() {
 	err := godotenv.Load()
@@ -146,6 +148,8 @@ func init() {
 	} else {
 		log.Info().Str("global_webhook", *globalWebhook).Msg("Global webhook configured from command line")
 	}
+
+	InitRabbitMQ()
 }
 
 func main() {
@@ -188,8 +192,8 @@ func main() {
 	var storeConnStr string
 	if config.Type == "postgres" {
 		storeConnStr = fmt.Sprintf(
-			"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
-			config.User, config.Password, config.Name, config.Host, config.Port,
+			"user=%s password=%s dbname=%s host=%s port=%s sslmode=%s",
+			config.User, config.Password, config.Name, config.Host, config.Port, config.SSLMode,
 		)
 		container, err = sqlstore.New(context.Background(), "postgres", storeConnStr, dbLog)
 	} else {

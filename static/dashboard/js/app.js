@@ -9,6 +9,8 @@ let currentInstanceData = null;
 
 document.addEventListener('DOMContentLoaded', function() {
 
+  let isHandlingChange = false;
+
   const loginForm = document.getElementById('loginForm');
   const loginTokenInput = document.getElementById('loginToken');
   const regularLoginBtn = document.getElementById('regularLoginBtn');
@@ -26,20 +28,26 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize dropdowns for webhook events
   $('#webhookEvents').dropdown({
     onChange: function(value, text, $selectedItem) {
+      if (isHandlingChange) return;
       if (value.includes('All')) {
         // If "All" is selected, clear selection and select only "All"
+        isHandlingChange = true;
         $('#webhookEvents').dropdown('clear');
         $('#webhookEvents').dropdown('set selected', 'All');
+        isHandlingChange = false;
       }
     }
   });
 
   $('#webhookEventsInstance').dropdown({
     onChange: function(value, text, $selectedItem) {
+      if (isHandlingChange) return;
       if (value.includes('All')) {
         // If "All" is selected, clear selection and select only "All"
+        isHandlingChange = true;
         $('#webhookEventsInstance').dropdown('clear');
         $('#webhookEventsInstance').dropdown('set selected', 'All');
+        isHandlingChange = false;
       }
     }
   });
@@ -812,7 +820,7 @@ async function connect(token='') {
   res = await fetch(baseUrl + "/session/connect", {
     method: "POST",
     headers: myHeaders,
-    body: JSON.stringify({Events: 'All', Immediate: true})
+    body: JSON.stringify({Subscribe: ['All'], Immediate: true})
   });
   data = await res.json();
   updateInterval=1000; // Decrease interval to react quicker to QR scan

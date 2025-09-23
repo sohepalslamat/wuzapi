@@ -141,52 +141,54 @@ func (s *server) Connect() http.HandlerFunc {
 		}
 
 		if clientManager.GetWhatsmeowClient(txtid) != nil {
-			s.Respond(w, r, http.StatusInternalServerError, errors.New("already connected"))
-			return
+			isConnected := clientManager.GetWhatsmeowClient(txtid).IsConnected()
+			if isConnected == true {
+				s.Respond(w, r, http.StatusInternalServerError, errors.New("already connected"))
+				return
+			}
+		}
+
+		var subscribedEvents []string
+		if len(t.Subscribe) < 1 {
+			if !Find(subscribedEvents, "") {
+				subscribedEvents = append(subscribedEvents, "")
+			}
 		} else {
-
-			var subscribedEvents []string
-			if len(t.Subscribe) < 1 {
-				if !Find(subscribedEvents, "") {
-					subscribedEvents = append(subscribedEvents, "")
+			for _, arg := range t.Subscribe {
+				if !Find(supportedEventTypes, arg) {
+					log.Warn().Str("Type", arg).Msg("Event type discarded")
+					continue
 				}
-			} else {
-				for _, arg := range t.Subscribe {
-					if !Find(supportedEventTypes, arg) {
-						log.Warn().Str("Type", arg).Msg("Event type discarded")
-						continue
-					}
-					if !Find(subscribedEvents, arg) {
-						subscribedEvents = append(subscribedEvents, arg)
-					}
+				if !Find(subscribedEvents, arg) {
+					subscribedEvents = append(subscribedEvents, arg)
 				}
 			}
-			eventstring = strings.Join(subscribedEvents, ",")
-			_, err = s.db.Exec("UPDATE users SET events=$1 WHERE id=$2", eventstring, txtid)
-			if err != nil {
-				log.Warn().Msg("Could not set events in users table")
-			}
-			log.Info().Str("events", eventstring).Msg("Setting subscribed events")
-			v := updateUserInfo(r.Context().Value("userinfo"), "Events", eventstring)
-			userinfocache.Set(token, v, cache.NoExpiration)
+		}
+		eventstring = strings.Join(subscribedEvents, ",")
+		_, err = s.db.Exec("UPDATE users SET events=$1 WHERE id=$2", eventstring, txtid)
+		if err != nil {
+			log.Warn().Msg("Could not set events in users table")
+		}
+		log.Info().Str("events", eventstring).Msg("Setting subscribed events")
+		v := updateUserInfo(r.Context().Value("userinfo"), "Events", eventstring)
+		userinfocache.Set(token, v, cache.NoExpiration)
 
-			log.Info().Str("jid", jid).Msg("Attempt to connect")
-			killchannel[txtid] = make(chan bool)
-			go s.startClient(txtid, jid, token, subscribedEvents)
+		log.Info().Str("jid", jid).Msg("Attempt to connect")
+		killchannel[txtid] = make(chan bool)
+		go s.startClient(txtid, jid, token, subscribedEvents)
 
-			if t.Immediate == false {
-				log.Warn().Msg("Waiting 10 seconds")
-				time.Sleep(10000 * time.Millisecond)
+		if t.Immediate == false {
+			log.Warn().Msg("Waiting 10 seconds")
+			time.Sleep(10000 * time.Millisecond)
 
-				if clientManager.GetWhatsmeowClient(txtid) != nil {
-					if !clientManager.GetWhatsmeowClient(txtid).IsConnected() {
-						s.Respond(w, r, http.StatusInternalServerError, errors.New("failed to Connect"))
-						return
-					}
-				} else {
-					s.Respond(w, r, http.StatusInternalServerError, errors.New("failed to connect"))
+			if clientManager.GetWhatsmeowClient(txtid) != nil {
+				if !clientManager.GetWhatsmeowClient(txtid).IsConnected() {
+					s.Respond(w, r, http.StatusInternalServerError, errors.New("failed to Connect"))
 					return
 				}
+			} else {
+				s.Respond(w, r, http.StatusInternalServerError, errors.New("failed to connect"))
+				return
 			}
 		}
 
@@ -810,7 +812,7 @@ func (s *server) SendDocument() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -931,7 +933,7 @@ func (s *server) SendAudio() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -1000,52 +1002,69 @@ func (s *server) SendImage() http.HandlerFunc {
 		var filedata []byte
 		var thumbnailBytes []byte
 
-		if t.Image[0:10] == "data:image" {
+		if len(t.Image) >= 10 && t.Image[0:10] == "data:image" {
 			var dataURL, err = dataurl.DecodeString(t.Image)
 			if err != nil {
 				s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
 				return
 			} else {
 				filedata = dataURL.Data
-				uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaImage)
-				if err != nil {
-					s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
-					return
-				}
 			}
-
-			// decode jpeg into image.Image
-			reader := bytes.NewReader(filedata)
-			img, _, err := image.Decode(reader)
+		} else if isHTTPURL(t.Image) {
+			data, ct, err := fetchURLBytes(t.Image)
 			if err != nil {
-				s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("could not decode image for thumbnail preparation: %v", err)))
+				s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch image from url: %v", err)))
 				return
 			}
-
-			// resize to width 72 using Lanczos resampling and preserve aspect ratio
-			m := resize.Thumbnail(72, 72, img, resize.Lanczos3)
-
-			tmpFile, err := os.CreateTemp("", "resized-*.jpg")
+			mimeType := ct
+			if !strings.HasPrefix(strings.ToLower(mimeType), "image/") {
+				mimeType = "image/jpeg"
+			}
+			imgDataURL := dataurl.New(data, mimeType)
+			parsed, err := dataurl.DecodeString(imgDataURL.String())
 			if err != nil {
-				s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Could not create temp file for thumbnail: %v", err)))
+				s.Respond(w, r, http.StatusInternalServerError, errors.New("could not re-encode image to base64"))
 				return
 			}
-			defer tmpFile.Close()
-
-			// write new image to file
-			if err := jpeg.Encode(tmpFile, m, nil); err != nil {
-				s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to encode jpeg: %v", err)))
-				return
-			}
-
-			thumbnailBytes, err = os.ReadFile(tmpFile.Name())
-			if err != nil {
-				s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to read %s: %v", tmpFile.Name(), err)))
-				return
-			}
-
+			filedata = parsed.Data
 		} else {
 			s.Respond(w, r, http.StatusBadRequest, errors.New("Image data should start with \"data:image/png;base64,\""))
+			return
+		}
+
+		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaImage)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
+			return
+		}
+
+		// decode jpeg into image.Image
+		reader := bytes.NewReader(filedata)
+		img, _, err := image.Decode(reader)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("could not decode image for thumbnail preparation: %v", err)))
+			return
+		}
+
+		// resize to width 72 using Lanczos resampling and preserve aspect ratio
+		m := resize.Thumbnail(72, 72, img, resize.Lanczos3)
+
+		tmpFile, err := os.CreateTemp("", "resized-*.jpg")
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Could not create temp file for thumbnail: %v", err)))
+			return
+		}
+		defer tmpFile.Close()
+
+		// write new image to file
+		if err := jpeg.Encode(tmpFile, m, nil); err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to encode jpeg: %v", err)))
+			return
+		}
+
+		thumbnailBytes, err = os.ReadFile(tmpFile.Name())
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to read %s: %v", tmpFile.Name(), err)))
 			return
 		}
 
@@ -1087,7 +1106,7 @@ func (s *server) SendImage() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -1210,7 +1229,7 @@ func (s *server) SendSticker() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -1286,14 +1305,34 @@ func (s *server) SendVideo() http.HandlerFunc {
 				return
 			} else {
 				filedata = dataURL.Data
-				uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaVideo)
-				if err != nil {
-					s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
-					return
-				}
+
 			}
+		} else if isHTTPURL(t.Video) {
+			data, ct, err := fetchURLBytes(t.Video)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch image from url: %v", err)))
+				return
+			}
+			mimeType := ct
+			if !strings.HasPrefix(strings.ToLower(mimeType), "video/") {
+				mimeType = "video/mpeg"
+			}
+			imgDataURL := dataurl.New(data, mimeType)
+			parsed, err := dataurl.DecodeString(imgDataURL.String())
+			if err != nil {
+				s.Respond(w, r, http.StatusInternalServerError, errors.New("could not re-encode video to base64"))
+				return
+			}
+			filedata = parsed.Data
+
 		} else {
 			s.Respond(w, r, http.StatusBadRequest, errors.New("data should start with \"data:mime/type;base64,\""))
+			return
+		}
+
+		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaVideo)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
 			return
 		}
 
@@ -1335,7 +1374,7 @@ func (s *server) SendVideo() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -1428,7 +1467,7 @@ func (s *server) SendContact() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -1523,7 +1562,7 @@ func (s *server) SendLocation() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -1627,7 +1666,7 @@ func (s *server) SendButtons() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -1867,7 +1906,7 @@ func (s *server) SendMessage() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -2005,7 +2044,7 @@ func (s *server) DeleteMessage() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message deleted")
-		response := map[string]interface{}{"Details": "Deleted", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Deleted", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -2097,8 +2136,62 @@ func (s *server) SendEditMessage() http.HandlerFunc {
 			return
 		}
 
-		log.Info().Str("timestamp", fmt.Sprintf("%d", resp.Timestamp)).Str("id", msgid).Msg("Message edit sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		log.Info().Str("timestamp", fmt.Sprintf("%d", resp.Timestamp.Unix())).Str("id", msgid).Msg("Message edit sent")
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
+		responseJson, err := json.Marshal(response)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, err)
+		} else {
+			s.Respond(w, r, http.StatusOK, string(responseJson))
+		}
+
+		return
+	}
+}
+
+// Request History Sync
+func (s *server) RequestHistorySync() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var resp whatsmeow.SendResponse
+		var err error
+
+		txtid := r.Context().Value("userinfo").(Values).Get("Id")
+
+		if clientManager.GetWhatsmeowClient(txtid) == nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New("no session"))
+			return
+		}
+
+		info, found := lastMessageCache.Get(txtid)
+		if !found {
+			info = &types.MessageInfo{}
+		}
+
+		historyMsg := clientManager.GetWhatsmeowClient(txtid).BuildHistorySyncRequest(info.(*types.MessageInfo), 50)
+		if historyMsg == nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New("Failed to build history sync request."))
+			return
+		}
+
+		targetJID := types.JID{Server: "s.whatsapp.net", User: "status"}
+		log.Debug().Str("userID", txtid).Str("target", targetJID.String()).Msg("Preparing to send history sync request")
+
+		resp, err = clientManager.GetWhatsmeowClient(txtid).SendMessage(context.Background(), clientManager.GetMyClient(txtid).WAClient.Store.ID.ToNonAD(), historyMsg, whatsmeow.SendRequestExtra{Peer: true})
+		if err != nil {
+			log.Error().
+				Str("userID", txtid).
+				Err(err).
+				Interface("target_jid", targetJID).
+				Interface("history_msg", historyMsg).
+				Msg("Failed to send history sync request")
+			s.Respond(w, r, http.StatusInternalServerError, errors.New("Failed to request history sync."))
+			return
+		}
+
+		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Msg("History sync request sent")
+		response := map[string]interface{}{"Details": "History sync request Sent", "Timestamp": resp.Timestamp.Unix()}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -2257,8 +2350,8 @@ func (s *server) SendTemplate() http.HandlerFunc {
 			return
 		}
 
-		log.Info().Str("timestamp", fmt.Sprintf("%d", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		log.Info().Str("timestamp", fmt.Sprintf("%d", resp.Timestamp.Unix())).Str("id", msgid).Msg("Message sent")
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -3014,7 +3107,7 @@ func (s *server) React() http.HandlerFunc {
 		}
 
 		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp, "Id": msgid}
+		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)
@@ -3336,7 +3429,7 @@ func (s *server) CreateGroup() http.HandlerFunc {
 			Participants: participantJIDs,
 		}
 
-		groupInfo, err := clientManager.GetWhatsmeowClient(txtid).CreateGroup(req)
+		groupInfo, err := clientManager.GetWhatsmeowClient(txtid).CreateGroup(r.Context(), req)
 
 		if err != nil {
 			log.Error().Str("error", fmt.Sprintf("%v", err)).Msg("failed to create group")
@@ -3461,7 +3554,7 @@ func (s *server) SetDisappearingTimer() http.HandlerFunc {
 			return
 		}
 
-		err = clientManager.GetWhatsmeowClient(txtid).SetDisappearingTimer(group, duration)
+		err = clientManager.GetWhatsmeowClient(txtid).SetDisappearingTimer(group, duration, time.Now())
 
 		if err != nil {
 			log.Error().Str("error", fmt.Sprintf("%v", err)).Msg("failed to set disappearing timer")
@@ -4046,16 +4139,6 @@ func (s *server) ListUsers() http.HandlerFunc {
 		var query string
 		var args []interface{}
 
-		/*
-			// Query the database to get the list of users
-			rows, err := s.db.Queryx("SELECT id, name, token, webhook, jid, qrcode, connected, expiration, events FROM users")
-			if err != nil {
-				s.Respond(w, r, http.StatusInternalServerError, errors.New("problem accessing DB"))
-				return
-			}
-			defer rows.Close()
-		*/
-
 		if hasID {
 			// Fetch a single user
 			query = "SELECT id, name, token, webhook, jid, qrcode, connected, expiration, proxy_url, events FROM users WHERE id = $1"
@@ -4180,8 +4263,8 @@ func (s *server) AddUser() http.HandlerFunc {
 			return
 		}
 
-		log.Info().Interface("proxyConfig", user.ProxyConfig).Interface("s3Config", user.S3Config).Msg("Valores recebidos para proxyConfig e s3Config")
-		log.Debug().Interface("user", user).Msg("Valores recebidos para user")
+		log.Info().Interface("proxyConfig", user.ProxyConfig).Interface("s3Config", user.S3Config).Msg("Received values for proxyConfig and s3Config")
+		log.Debug().Interface("user", user).Msg("Received values for user")
 
 		// Set defaults only if nil
 		if user.Events == "" {
