@@ -55,7 +55,7 @@ var (
 	globalHTTPClient = &http.Client{Timeout: 60 * time.Second}
 )
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 func init() {
 	err := godotenv.Load()
