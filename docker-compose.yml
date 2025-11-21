@@ -11,6 +11,9 @@ services:
       - DB_USER=jack-wuzapi
       - DB_PASSWORD=jack-wuzapi-admin@123
       - DB_NAME=jack-wuzapi
+      - WUZAPI_GLOBAL_ENCRYPTION_KEY=${WUZAPI_GLOBAL_ENCRYPTION_KEY}
+      - WUZAPI_GLOBAL_HMAC_KEY=${WUZAPI_GLOBAL_HMAC_KEY:-}
+      - WUZAPI_GLOBAL_WEBHOOK=${WUZAPI_GLOBAL_WEBHOOK:-}
       - DB_HOST=db
       - DB_PORT=5432
       - TZ=Europe/Istanbul
@@ -50,6 +53,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    hostname: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: wuzapi
       RABBITMQ_DEFAULT_PASS: wuzapi

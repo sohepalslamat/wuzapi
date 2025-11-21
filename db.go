@@ -22,8 +22,8 @@ type DatabaseConfig struct {
 	SSLMode  string
 }
 
-func InitializeDatabase(exPath string) (*sqlx.DB, error) {
-	config := getDatabaseConfig(exPath)
+func InitializeDatabase(exPath, dataDirFlag string) (*sqlx.DB, error) {
+	config := getDatabaseConfig(exPath, dataDirFlag)
 
 	if config.Type == "postgres" {
 		return initializePostgres(config)
@@ -31,7 +31,7 @@ func InitializeDatabase(exPath string) (*sqlx.DB, error) {
 	return initializeSQLite(config)
 }
 
-func getDatabaseConfig(exPath string) DatabaseConfig {
+func getDatabaseConfig(exPath, dataDirFlag string) DatabaseConfig {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
@@ -58,9 +58,15 @@ func getDatabaseConfig(exPath string) DatabaseConfig {
 		}
 	}
 
+	// Use datadir flag if provided, otherwise fall back to executable directory
+	dataPath := exPath
+	if dataDirFlag != "" {
+		dataPath = dataDirFlag
+	}
+
 	return DatabaseConfig{
 		Type: "sqlite",
-		Path: filepath.Join(exPath, "dbdata"),
+		Path: filepath.Join(dataPath, "dbdata"),
 	}
 }
 
@@ -111,16 +117,17 @@ type HistoryMessage struct {
 	TextContent     string    `json:"text_content" db:"text_content"`
 	MediaLink       string    `json:"media_link" db:"media_link"`
 	QuotedMessageID string    `json:"quoted_message_id,omitempty" db:"quoted_message_id"`
+	DataJson        string    `json:"data_json" db:"datajson"`
 }
 
-func (s *server) saveMessageToHistory(userID, chatJID, senderJID, messageID, messageType, textContent, mediaLink, quotedMessageID string) error {
-	query := `INSERT INTO message_history (user_id, chat_jid, sender_jid, message_id, timestamp, message_type, text_content, media_link, quoted_message_id)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+func (s *server) saveMessageToHistory(userID, chatJID, senderJID, messageID, messageType, textContent, mediaLink, quotedMessageID, dataJson string) error {
+	query := `INSERT INTO message_history (user_id, chat_jid, sender_jid, message_id, timestamp, message_type, text_content, media_link, quoted_message_id, datajson)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
 	if s.db.DriverName() == "sqlite" {
-		query = `INSERT INTO message_history (user_id, chat_jid, sender_jid, message_id, timestamp, message_type, text_content, media_link, quoted_message_id)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		query = `INSERT INTO message_history (user_id, chat_jid, sender_jid, message_id, timestamp, message_type, text_content, media_link, quoted_message_id, datajson)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	}
-	_, err := s.db.Exec(query, userID, chatJID, senderJID, messageID, time.Now(), messageType, textContent, mediaLink, quotedMessageID)
+	_, err := s.db.Exec(query, userID, chatJID, senderJID, messageID, time.Now(), messageType, textContent, mediaLink, quotedMessageID, dataJson)
 	if err != nil {
 		return fmt.Errorf("failed to save message to history: %w", err)
 	}
@@ -128,9 +135,10 @@ func (s *server) saveMessageToHistory(userID, chatJID, senderJID, messageID, mes
 }
 
 func (s *server) trimMessageHistory(userID, chatJID string, limit int) error {
-	var query string
+	var queryHistory, querySecrets string
+
 	if s.db.DriverName() == "postgres" {
-		query = `
+		queryHistory = `
             DELETE FROM message_history
             WHERE id IN (
                 SELECT id FROM message_history
@@ -138,8 +146,17 @@ func (s *server) trimMessageHistory(userID, chatJID string, limit int) error {
                 ORDER BY timestamp DESC
                 OFFSET $3
             )`
+
+		querySecrets = `
+            DELETE FROM whatsmeow_message_secrets
+            WHERE message_id IN (
+                SELECT id FROM message_history
+                WHERE user_id = $1 AND chat_jid = $2
+                ORDER BY timestamp DESC
+                OFFSET $3
+            )`
 	} else { // sqlite
-		query = `
+		queryHistory = `
             DELETE FROM message_history
             WHERE id IN (
                 SELECT id FROM message_history
@@ -147,11 +164,24 @@ func (s *server) trimMessageHistory(userID, chatJID string, limit int) error {
                 ORDER BY timestamp DESC
                 LIMIT -1 OFFSET ?
             )`
+
+		querySecrets = `
+            DELETE FROM whatsmeow_message_secrets
+            WHERE message_id IN (
+                SELECT id FROM message_history
+                WHERE user_id = ? AND chat_jid = ?
+                ORDER BY timestamp DESC
+                LIMIT -1 OFFSET ?
+            )`
 	}
 
-	_, err := s.db.Exec(query, userID, chatJID, limit)
-	if err != nil {
+	if _, err := s.db.Exec(querySecrets, userID, chatJID, limit); err != nil {
+		return fmt.Errorf("failed to trim message secrets: %w", err)
+	}
+
+	if _, err := s.db.Exec(queryHistory, userID, chatJID, limit); err != nil {
 		return fmt.Errorf("failed to trim message history: %w", err)
 	}
+
 	return nil
 }

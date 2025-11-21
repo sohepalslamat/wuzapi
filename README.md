@@ -11,7 +11,7 @@ Whatsmeow does not use Puppeteer on headless Chrome, nor an Android emulator. It
 
 **Using this software in violation of WhatsApp’s Terms of Service can get your number banned**:  
 Be very careful—do not use this to send SPAM or anything similar. Use at your own risk. If you need to develop something for commercial purposes, contact a WhatsApp global solution provider and sign up for the WhatsApp Business API service instead.
- 
+
 ## Available endpoints
 
 * **Session:** Connect, disconnect, and log out from WhatsApp. Retrieve connection status and QR codes for scanning.
@@ -20,7 +20,28 @@ Be very careful—do not use this to send SPAM or anything similar. Use at your 
 * **Chat:** Set presence (typing/paused, recording media), mark messages as read, download images from messages, send reactions.
 * **Groups:** Create, delete and list groups, get info, get invite links, set participants, change group photos and names.
 * **Webhooks:** Set and get webhooks that will be called whenever events or messages are received.
- 
+* **HMAC Configuration:** Configure HMAC keys for webhook security and signature verification.
+
+### Webhook HMAC Signing
+
+When HMAC is configured, all webhooks include an `x-hmac-signature` header with SHA-256 HMAC signature.
+
+#### Signature Generation by Content-Type:
+
+**`application/json`**
+* Signed data: Raw JSON request body
+* Verification: Use the exact JSON received
+
+**`application/x-www-form-urlencoded`**
+* Signed data: URL-encoded form string (`key=value&key2=value2`)
+* Verification: Reconstruct the form string from received parameters
+
+**`multipart/form-data`** (file uploads)
+* Signed data: JSON representation of form fields (excluding files)
+* Verification: Create JSON from non-file form fields
+
+* Always verify signatures before processing webhooks
+
 ## Prerequisites
 
 **Required:**
@@ -94,6 +115,39 @@ cp .env.sample .env
 WUZAPI_ADMIN_TOKEN=your_admin_token_here
 ```
 
+#### Security Settings
+
+```
+WUZAPI_GLOBAL_ENCRYPTION_KEY=your_32_byte_encryption_key_here
+WUZAPI_GLOBAL_HMAC_KEY=your_global_hmac_key_here
+```
+
+#### Optional Settings
+
+```
+TZ=America/New_York
+WEBHOOK_FORMAT=json
+SESSION_DEVICE_NAME=WuzAPI
+WUZAPI_PORT=8080
+WUZAPI_GLOBAL_WEBHOOK=https://your-global-webhook.url
+WEBHOOK_RETRY_ENABLED=true
+WEBHOOK_RETRY_COUNT=2
+WEBHOOK_RETRY_DELAY_SECONDS=30
+WEBHOOK_ERROR_QUEUE_NAME=wuzapi_dead_letter_webhooks
+```
+
+### Important Notes
+
+#### Auto-Generated Credentials
+If the following settings are not provided, they will be auto-generated:
+* `WUZAPI_ADMIN_TOKEN`: Random 32-character token
+* `WUZAPI_GLOBAL_ENCRYPTION_KEY`: Random 32-byte key for AES-256 encryption
+
+**Important**: Save auto-generated credentials to your `.env` file or you will lose access to encrypted data and admin functions on restart!
+
+#### Webhook Security
+* `WUZAPI_GLOBAL_HMAC_KEY`: Global HMAC key for webhook signing (minimum 32 characters)
+
 #### Database Configuration
 
 **For PostgreSQL:**
@@ -112,9 +166,10 @@ No database configuration needed - SQLite is used by default if no PostgreSQL se
 #### Optional Settings
 ```
 TZ=America/New_York
-WEBHOOK_FORMAT=json  # or "form" for the default
+WEBHOOK_FORMAT=json # or "form" for the default
 SESSION_DEVICE_NAME=WuzAPI
-WUZAPI_PORT=8080     # Port for the WuzAPI server
+WUZAPI_PORT=8080 # Port for the WuzAPI server
+WUZAPI_GLOBAL_WEBHOOK= # Global webhook URL for all instances
 ```
 
 ### RabbitMQ Integration
@@ -133,6 +188,19 @@ When enabled:
 * Events will include the userId and instanceName
 * This works alongside webhook configurations - events will be sent to both RabbitMQ and any configured webhooks
 * The integration is global and affects all instances
+
+### Webhook Security with HMAC
+
+WuzAPI supports HMAC signatures for webhook verification:
+
+* **Per-instance HMAC**: Configure unique HMAC keys for each user instance
+* **Global HMAC**: Set a global HMAC key via `WUZAPI_GLOBAL_HMAC_KEY` environment variable
+* **Signature Header**: All signed webhooks include `x-hmac-signature` header
+* **Key Security**: HMAC keys are never exposed after configuration
+
+**Priority**: Instance HMAC > Global HMAC > No signature
+
+Configure HMAC keys via the Dashboard or using the `/session/hmac/config` API endpoints.
 
 #### Key configuration options:
 
@@ -255,6 +323,36 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/LuizFelipeNeves>
+            <img src=https://avatars.githubusercontent.com/u/14094719?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Luiz Felipe Neves/>
+            <br />
+            <sub style="font-size:14px"><b>Luiz Felipe Neves</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/cleitonme>
+            <img src=https://avatars.githubusercontent.com/u/12551230?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=cleitonme/>
+            <br />
+            <sub style="font-size:14px"><b>cleitonme</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/WellingtonFonseca>
+            <img src=https://avatars.githubusercontent.com/u/25608175?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Wellington Fonseca/>
+            <br />
+            <sub style="font-size:14px"><b>Wellington Fonseca</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/xenodium>
+            <img src=https://avatars.githubusercontent.com/u/8107219?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=xenodium/>
+            <br />
+            <sub style="font-size:14px"><b>xenodium</b></sub>
+        </a>
+    </td>
+</tr>
+<tr>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/netrixken>
             <img src=https://avatars.githubusercontent.com/u/9066682?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Netrix Ken/>
             <br />
@@ -262,33 +360,10 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/pedroafonso18>
-            <img src=https://avatars.githubusercontent.com/u/157052926?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Pedro Afonso/>
-            <br />
-            <sub style="font-size:14px"><b>Pedro Afonso</b></sub>
-        </a>
-    </td>
-    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/RuanAyram>
-            <img src=https://avatars.githubusercontent.com/u/16547662?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Ruan Kaylo/>
-            <br />
-            <sub style="font-size:14px"><b>Ruan Kaylo</b></sub>
-        </a>
-    </td>
-    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/luizrgf2>
             <img src=https://avatars.githubusercontent.com/u/71092163?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Luiz Ricardo Gonçalves Felipe/>
             <br />
             <sub style="font-size:14px"><b>Luiz Ricardo Gonçalves Felipe</b></sub>
-        </a>
-    </td>
-</tr>
-<tr>
-    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/chrsmendes>
-            <img src=https://avatars.githubusercontent.com/u/77082167?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Christopher Mendes/>
-            <br />
-            <sub style="font-size:14px"><b>Christopher Mendes</b></sub>
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
@@ -299,10 +374,40 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/vitorsilvalima>
+            <img src=https://avatars.githubusercontent.com/u/9752658?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Vitor Silva Lima/>
+            <br />
+            <sub style="font-size:14px"><b>Vitor Silva Lima</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/ramon-victor>
             <img src=https://avatars.githubusercontent.com/u/13617054?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=ramon-victor/>
             <br />
             <sub style="font-size:14px"><b>ramon-victor</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/RuanAyram>
+            <img src=https://avatars.githubusercontent.com/u/16547662?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Ruan Kaylo/>
+            <br />
+            <sub style="font-size:14px"><b>Ruan Kaylo</b></sub>
+        </a>
+    </td>
+</tr>
+<tr>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/pedroafonso18>
+            <img src=https://avatars.githubusercontent.com/u/157052926?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Pedro Afonso/>
+            <br />
+            <sub style="font-size:14px"><b>Pedro Afonso</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/chrsmendes>
+            <img src=https://avatars.githubusercontent.com/u/77082167?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Christopher Mendes/>
+            <br />
+            <sub style="font-size:14px"><b>Christopher Mendes</b></sub>
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
@@ -324,6 +429,13 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
             <img src=https://avatars.githubusercontent.com/u/981265?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Gustavo Salomé />
             <br />
             <sub style="font-size:14px"><b>Gustavo Salomé </b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/AntonKun>
+            <img src=https://avatars.githubusercontent.com/u/59668952?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Anton Kozyk/>
+            <br />
+            <sub style="font-size:14px"><b>Anton Kozyk</b></sub>
         </a>
     </td>
 </tr>
@@ -364,14 +476,21 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/joaokopernico>
+            <img src=https://avatars.githubusercontent.com/u/111400483?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=joaokopernico/>
+            <br />
+            <sub style="font-size:14px"><b>joaokopernico</b></sub>
+        </a>
+    </td>
+</tr>
+<tr>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/JobasFernandes>
             <img src=https://avatars.githubusercontent.com/u/26033148?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Joseph Fernandes/>
             <br />
             <sub style="font-size:14px"><b>Joseph Fernandes</b></sub>
         </a>
     </td>
-</tr>
-<tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/renancesarti-cyber>
             <img src=https://avatars.githubusercontent.com/u/235291917?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=renancesarti-cyber/>
@@ -407,6 +526,8 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
             <sub style="font-size:14px"><b>Ricardo Maminhak</b></sub>
         </a>
     </td>
+</tr>
+<tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/zennnez>
             <img src=https://avatars.githubusercontent.com/u/3524740?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=zen/>
