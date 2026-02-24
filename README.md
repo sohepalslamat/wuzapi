@@ -528,14 +528,21 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/sohepalslamat>
+            <img src=https://avatars.githubusercontent.com/u/36170722?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Sohaib Alslamat/>
+            <br />
+            <sub style="font-size:14px"><b>Sohaib Alslamat</b></sub>
+        </a>
+    </td>
+</tr>
+<tr>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/ViFigueiredo>
             <img src=https://avatars.githubusercontent.com/u/67883343?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=ViFigueiredo/>
             <br />
             <sub style="font-size:14px"><b>ViFigueiredo</b></sub>
         </a>
     </td>
-</tr>
-<tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/cadao7>
             <img src=https://avatars.githubusercontent.com/u/306330?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Ricardo Maminhak/>
