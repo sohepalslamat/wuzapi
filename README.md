@@ -368,6 +368,13 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/vitorsilvalima>
+            <img src=https://avatars.githubusercontent.com/u/9752658?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Vitor Silva Lima/>
+            <br />
+            <sub style="font-size:14px"><b>Vitor Silva Lima</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/AntonKun>
             <img src=https://avatars.githubusercontent.com/u/59668952?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Anton Kozyk/>
             <br />
@@ -382,24 +389,17 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/luizrgf2>
-            <img src=https://avatars.githubusercontent.com/u/71092163?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Luiz Ricardo Gonçalves Felipe/>
+        <a href=https://github.com/pedroafonso18>
+            <img src=https://avatars.githubusercontent.com/u/157052926?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Pedro Afonso/>
             <br />
-            <sub style="font-size:14px"><b>Luiz Ricardo Gonçalves Felipe</b></sub>
+            <sub style="font-size:14px"><b>Pedro Afonso</b></sub>
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/andreydruz>
-            <img src=https://avatars.githubusercontent.com/u/976438?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=andreydruz/>
+        <a href=https://github.com/RuanAyram>
+            <img src=https://avatars.githubusercontent.com/u/16547662?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Ruan Kaylo/>
             <br />
-            <sub style="font-size:14px"><b>andreydruz</b></sub>
-        </a>
-    </td>
-    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/vitorsilvalima>
-            <img src=https://avatars.githubusercontent.com/u/9752658?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Vitor Silva Lima/>
-            <br />
-            <sub style="font-size:14px"><b>Vitor Silva Lima</b></sub>
+            <sub style="font-size:14px"><b>Ruan Kaylo</b></sub>
         </a>
     </td>
 </tr>
@@ -412,17 +412,10 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/RuanAyram>
-            <img src=https://avatars.githubusercontent.com/u/16547662?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Ruan Kaylo/>
+        <a href=https://github.com/andreydruz>
+            <img src=https://avatars.githubusercontent.com/u/976438?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=andreydruz/>
             <br />
-            <sub style="font-size:14px"><b>Ruan Kaylo</b></sub>
-        </a>
-    </td>
-    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/pedroafonso18>
-            <img src=https://avatars.githubusercontent.com/u/157052926?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Pedro Afonso/>
-            <br />
-            <sub style="font-size:14px"><b>Pedro Afonso</b></sub>
+            <sub style="font-size:14px"><b>andreydruz</b></sub>
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
@@ -430,6 +423,13 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
             <img src=https://avatars.githubusercontent.com/u/13478652?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Igor Trindade/>
             <br />
             <sub style="font-size:14px"><b>Igor Trindade</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/luizrgf2>
+            <img src=https://avatars.githubusercontent.com/u/71092163?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Luiz Ricardo Gonçalves Felipe/>
+            <br />
+            <sub style="font-size:14px"><b>Luiz Ricardo Gonçalves Felipe</b></sub>
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
@@ -449,17 +449,24 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
 </tr>
 <tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
-        <a href=https://github.com/luiis716>
-            <img src=https://avatars.githubusercontent.com/u/97978347?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=luiis716/>
-            <br />
-            <sub style="font-size:14px"><b>luiis716</b></sub>
-        </a>
-    </td>
-    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/sohepalslamat>
             <img src=https://avatars.githubusercontent.com/u/36170722?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Sohaib Alslamat/>
             <br />
             <sub style="font-size:14px"><b>Sohaib Alslamat</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/paul-lestyo>
+            <img src=https://avatars.githubusercontent.com/u/51690314?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Paulus Lestyo A/>
+            <br />
+            <sub style="font-size:14px"><b>Paulus Lestyo A</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/luiis716>
+            <img src=https://avatars.githubusercontent.com/u/97978347?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=luiis716/>
+            <br />
+            <sub style="font-size:14px"><b>luiis716</b></sub>
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
@@ -483,6 +490,8 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
             <sub style="font-size:14px"><b>Anil Gulecha</b></sub>
         </a>
     </td>
+</tr>
+<tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/AlanMartines>
             <img src=https://avatars.githubusercontent.com/u/10979090?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Alan Martines/>
@@ -490,8 +499,6 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
             <sub style="font-size:14px"><b>Alan Martines</b></sub>
         </a>
     </td>
-</tr>
-<tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/DwiRizqiH>
             <img src=https://avatars.githubusercontent.com/u/69355492?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Ahmad Dwi Rizqi Hidayatulloh/>
@@ -527,6 +534,8 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
             <sub style="font-size:14px"><b>Joseph Fernandes</b></sub>
         </a>
     </td>
+</tr>
+<tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/renancesarti-cyber>
             <img src=https://avatars.githubusercontent.com/u/235291917?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=renancesarti-cyber/>
@@ -534,8 +543,6 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
             <sub style="font-size:14px"><b>renancesarti-cyber</b></sub>
         </a>
     </td>
-</tr>
-<tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/ruben18salazar3>
             <img src=https://avatars.githubusercontent.com/u/86245508?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Rubén Salazar/>
