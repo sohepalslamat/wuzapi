@@ -363,11 +363,19 @@ func (m *S3Manager) ProcessMediaForS3(ctx context.Context, userID, contactJID, m
 	// Generate public URL
 	publicURL := m.GetPublicURL(userID, key)
 
+	// Read the bucket through GetClient, which acquires the read lock — this
+	// avoids racing with a concurrent reconfigure/removal of the configs map and
+	// the nil deref the previous unlocked read could hit.
+	bucket := ""
+	if _, config, ok := m.GetClient(userID); ok && config != nil {
+		bucket = config.Bucket
+	}
+
 	// Return S3 metadata
 	s3Data := map[string]interface{}{
 		"url":      publicURL,
 		"key":      key,
-		"bucket":   m.configs[userID].Bucket,
+		"bucket":   bucket,
 		"size":     len(data),
 		"mimeType": mimeType,
 		"fileName": fileName,
