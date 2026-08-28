@@ -50,15 +50,6 @@ When HMAC is configured, all webhooks include an `x-hmac-signature` header with 
 **Optional:**
 * Docker (for containerization)
 
-## Updating dependencies
-
-This project uses the whatsmeow library to communicate with WhatsApp. To update the library to the latest version, run:
-
-```bash
-go get -u go.mau.fi/whatsmeow@latest
-go mod tidy
-```
-
 ## Building
 
 ```
@@ -312,6 +303,22 @@ request body, always passing the Token header for authenticating the request.
 
 Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
 
+## Updating the upstream whatsmeow library
+
+> [!CAUTION]
+> This section is intended for maintainers and developers. Regular users should use the whatsmeow version pinned in `go.mod` and should not upgrade it as part of the normal installation or build process.
+
+WuzAPI uses [whatsmeow](https://github.com/tulir/whatsmeow) to communicate with WhatsApp. Its upstream API can introduce breaking changes, so upgrading to the latest version may cause WuzAPI to stop compiling or working correctly until its code is adapted.
+
+Perform upgrades in a development branch, review the resulting `go.mod` and `go.sum` changes, and verify that WuzAPI builds and its tests pass before deploying the update:
+
+```bash
+go get -u go.mau.fi/whatsmeow@latest
+go mod tidy
+go test ./...
+go build .
+```
+
 ## Contributors
 
 <!-- CONTRIBUTORS:START -->
@@ -379,18 +386,24 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
     </a>
   </td>
 <td align="center">
+    <a href="https://github.com/ThiagoBauken">
+      <img src="https://avatars.githubusercontent.com/u/107090829?v=4" width="100px;" style="border-radius:50%;"/><br />
+      <sub><b>ThiagoBauken</b></sub>
+    </a>
+  </td>
+<td align="center">
     <a href="https://github.com/netrixken">
       <img src="https://avatars.githubusercontent.com/u/9066682?v=4" width="100px;" style="border-radius:50%;"/><br />
       <sub><b>netrixken</b></sub>
     </a>
   </td>
+</tr><tr>
 <td align="center">
     <a href="https://github.com/luizrgf2">
       <img src="https://avatars.githubusercontent.com/u/71092163?v=4" width="100px;" style="border-radius:50%;"/><br />
       <sub><b>luizrgf2</b></sub>
     </a>
   </td>
-</tr><tr>
 <td align="center">
     <a href="https://github.com/andreydruz">
       <img src="https://avatars.githubusercontent.com/u/976438?v=4" width="100px;" style="border-radius:50%;"/><br />
@@ -421,13 +434,13 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
       <sub><b>igortrinidad</b></sub>
     </a>
   </td>
+</tr><tr>
 <td align="center">
     <a href="https://github.com/chrsmendes">
       <img src="https://avatars.githubusercontent.com/u/77082167?v=4" width="100px;" style="border-radius:50%;"/><br />
       <sub><b>chrsmendes</b></sub>
     </a>
   </td>
-</tr><tr>
 <td align="center">
     <a href="https://github.com/jeffersonfelixdev">
       <img src="https://avatars.githubusercontent.com/u/3003222?v=4" width="100px;" style="border-radius:50%;"/><br />
@@ -458,13 +471,13 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
       <sub><b>joaosouz4dev</b></sub>
     </a>
   </td>
+</tr><tr>
 <td align="center">
     <a href="https://github.com/gusnips">
       <img src="https://avatars.githubusercontent.com/u/981265?v=4" width="100px;" style="border-radius:50%;"/><br />
       <sub><b>gusnips</b></sub>
     </a>
   </td>
-</tr><tr>
 <td align="center">
     <a href="https://github.com/anilgulecha">
       <img src="https://avatars.githubusercontent.com/u/1016984?v=4" width="100px;" style="border-radius:50%;"/><br />
@@ -472,27 +485,21 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
     </a>
   </td>
 <td align="center">
-    <a href="https://github.com/AlanMartines">
-      <img src="https://avatars.githubusercontent.com/u/10979090?v=4" width="100px;" style="border-radius:50%;"/><br />
-      <sub><b>AlanMartines</b></sub>
+    <a href="https://github.com/zennnez">
+      <img src="https://avatars.githubusercontent.com/u/3524740?v=4" width="100px;" style="border-radius:50%;"/><br />
+      <sub><b>zennnez</b></sub>
     </a>
   </td>
 <td align="center">
-    <a href="https://github.com/DwiRizqiH">
-      <img src="https://avatars.githubusercontent.com/u/69355492?v=4" width="100px;" style="border-radius:50%;"/><br />
-      <sub><b>DwiRizqiH</b></sub>
+    <a href="https://github.com/murilo-koko">
+      <img src="https://avatars.githubusercontent.com/u/223512888?v=4" width="100px;" style="border-radius:50%;"/><br />
+      <sub><b>murilo-koko</b></sub>
     </a>
   </td>
 <td align="center">
-    <a href="https://github.com/elohmeier">
-      <img src="https://avatars.githubusercontent.com/u/2536303?v=4" width="100px;" style="border-radius:50%;"/><br />
-      <sub><b>elohmeier</b></sub>
-    </a>
-  </td>
-<td align="center">
-    <a href="https://github.com/fadlee">
-      <img src="https://avatars.githubusercontent.com/u/334797?v=4" width="100px;" style="border-radius:50%;"/><br />
-      <sub><b>fadlee</b></sub>
+    <a href="https://github.com/Jwenqiang">
+      <img src="https://avatars.githubusercontent.com/u/20280001?v=4" width="100px;" style="border-radius:50%;"/><br />
+      <sub><b>Jwenqiang</b></sub>
     </a>
   </td>
 </tr></table>
@@ -505,7 +512,13 @@ Check the [API Reference](https://github.com/asternic/wuzapi/blob/main/API.md)
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=asternic/wuzapi&type=Date)](https://www.star-history.com/#asternic/wuzapi&Date)
+<a href="https://www.star-history.com/?type=date&repos=asternic%2Fwuzapi">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=asternic/wuzapi&type=date&theme=dark&legend=top-left&sealed_token=btZMq-H0d-DBRgXRdFTBx24bZ3x6oVGnSTwAk6DEM19J5wiWYhsN20SekiMRIbFaEkIhmwM5_SyQKT1QTvNVYF9QAaFLdvvPPEq7Y7dvZ34MoKnKNXyXlQgerN1ag_hYzp9RGYAywggEXDxTESW-asFZnacNcBq7LvO4XhspFm-KflmgBomjG_czi8vR" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=asternic/wuzapi&type=date&legend=top-left&sealed_token=btZMq-H0d-DBRgXRdFTBx24bZ3x6oVGnSTwAk6DEM19J5wiWYhsN20SekiMRIbFaEkIhmwM5_SyQKT1QTvNVYF9QAaFLdvvPPEq7Y7dvZ34MoKnKNXyXlQgerN1ag_hYzp9RGYAywggEXDxTESW-asFZnacNcBq7LvO4XhspFm-KflmgBomjG_czi8vR" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=asternic/wuzapi&type=date&legend=top-left&sealed_token=btZMq-H0d-DBRgXRdFTBx24bZ3x6oVGnSTwAk6DEM19J5wiWYhsN20SekiMRIbFaEkIhmwM5_SyQKT1QTvNVYF9QAaFLdvvPPEq7Y7dvZ34MoKnKNXyXlQgerN1ag_hYzp9RGYAywggEXDxTESW-asFZnacNcBq7LvO4XhspFm-KflmgBomjG_czi8vR" />
+ </picture>
+</a>
 
 ## License
 
