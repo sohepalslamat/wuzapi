@@ -1,27 +1,30 @@
 services:
   wuzapi-server:
-    container_name: wuzapi-jack-ai-main-server
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "127.0.0.1:${WUZAPI_PORT:-8080}:8080"
+      - "${WUZAPI_PORT:-8080}:8080"
     environment:
-      - WUZAPI_ADMIN_TOKEN=2025@Jack-ai-admin@123
-      - DB_USER=jack-wuzapi
-      - DB_PASSWORD=jack-wuzapi-admin@123
-      - DB_NAME=jack-wuzapi
+      - WUZAPI_ADMIN_TOKEN=${WUZAPI_ADMIN_TOKEN}
       - WUZAPI_GLOBAL_ENCRYPTION_KEY=${WUZAPI_GLOBAL_ENCRYPTION_KEY}
       - WUZAPI_GLOBAL_HMAC_KEY=${WUZAPI_GLOBAL_HMAC_KEY:-}
       - WUZAPI_GLOBAL_WEBHOOK=${WUZAPI_GLOBAL_WEBHOOK:-}
+      - DB_USER=${DB_USER:-wuzapi}
+      - DB_PASSWORD=${DB_PASSWORD:-wuzapi}
+      - DB_NAME=${DB_NAME:-wuzapi}
       - DB_HOST=db
-      - DB_PORT=5432
-      - TZ=Europe/Istanbul
-      - WEBHOOK_FORMAT=json
-      - SESSION_DEVICE_NAME=Jack-ai
+      - DB_PORT=${DB_PORT:-5432}
+      - TZ=${TZ:-America/Sao_Paulo}
+      - WEBHOOK_FORMAT=${WEBHOOK_FORMAT:-json}
+      - SESSION_DEVICE_NAME=${SESSION_DEVICE_NAME:-WuzAPI}
       # RabbitMQ configuration Optional
-      - RABBITMQ_URL=amqp://wuzapi:wuzapi@rabbitmq:5672/
-      - RABBITMQ_QUEUE=whatsapp_events
+      # Disabled 2026-09-19: no consumer exists (webhook is the delivery path).
+      # A 136 MB message killed the AMQP channel and the client never reopens it
+      # (rabbitmq.go watches the connection, not the channel) -> ~11k errors/day.
+      # Re-enable by uncommenting the two lines below.
+      # - RABBITMQ_URL=amqp://wuzapi:wuzapi@rabbitmq:5672/
+      # - RABBITMQ_QUEUE=whatsapp_events
     depends_on:
       db:
         condition: service_healthy
@@ -32,20 +35,19 @@ services:
     restart: unless-stopped
 
   db:
-    container_name: wuzapi-jack-ai-main-db
     image: postgres:16
     environment:
-      POSTGRES_USER: jack-wuzapi
-      POSTGRES_PASSWORD: jack-wuzapi-admin@123
-      POSTGRES_DB: jack-wuzapi
-    ports:
-      - "127.0.0.1:5430:5432"
+      POSTGRES_USER: ${DB_USER:-wuzapi}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-wuzapi}
+      POSTGRES_DB: ${DB_NAME:-wuzapi}
+    # ports:
+    #   - "127.0.0.1:${DB_PORT:-5432}:5432" # Uncomment to access the database directly from your host machine.
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
       - wuzapi-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jack-wuzapi"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-wuzapi}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -75,7 +77,6 @@ services:
 
   rabbitmq-init:
     image: curlimages/curl:latest
-    container_name: wuzapi-rabbitmq-init
     depends_on:
       rabbitmq:
         condition: service_healthy
