@@ -1,5 +1,6 @@
 services:
   wuzapi-server:
+    image: wuzapi-wuzapi-server:whatsmeow-20260917
     build:
       context: .
       dockerfile: Dockerfile
