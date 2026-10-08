@@ -70,3 +70,5 @@ require (
 	golang.org/x/sys v0.48.0 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
+
+replace go.mau.fi/whatsmeow => github.com/sohepalslamat/whatsmeow v0.0.0-20261008224930-fd1540d8a9f6
